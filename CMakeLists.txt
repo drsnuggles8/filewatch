@@ -1,14 +1,19 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14...3.28)
 
 # Project name
-project( FileWatch VERSION 0.0.1 LANGUAGES C CXX)
+project(FileWatch 
+        VERSION 0.0.1 
+        DESCRIPTION "A C++ File Watcher Library"
+        LANGUAGES CXX)
 
-option(BuildTests "Build the unit tests" ON)
-enable_testing()
+# Build options
+option(BUILD_TESTS "Build the unit tests" OFF)
+option(BUILD_EXAMPLES "Build examples" OFF)
 
-# Enable c++11
+# Enable C++11 (or higher if preferred)
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED on)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Add debug flags
 if(MSVC)
@@ -18,16 +23,15 @@ else()
 endif()
 
 if(APPLE)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework CoreServices")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework CoreServices")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 endif()
 
-# dial up the warnings
+# Dial up the warnings
 if(MSVC)
   # Force to always compile with W4
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /permissive")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
   endif()
@@ -36,9 +40,17 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
 endif()
 
-# create and configure the unit test target
-if(BuildTests)
-    add_subdirectory(tests)
+# Set up testing
+include(CTest)
+if(BUILD_TESTS AND BUILD_TESTING)
+  add_subdirectory(tests)
 endif()
 
-# add_subdirectory(example)
+# Build examples if enabled
+if(BUILD_EXAMPLES)
+  add_subdirectory(example)
+endif()
+
+# Install target for header-only library
+install(FILES FileWatch.hpp
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/filewatch)
